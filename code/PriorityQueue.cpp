@@ -1,79 +1,69 @@
 #include "PriorityQueue.h"
 
-
 PriorityQueue::PriorityQueue() {
-    // Constructor code here if needed
+    // No need to add anything here
 }
 
 PriorityQueue::~PriorityQueue() {
-    // Destructor code here if needed
+    // No need to add anything here
 }
 
-shared_ptr<vector<pq>> PriorityQueue::InitPriorityQueue() {
-    return make_shared<vector<pq>>();
+shared_ptr<pq> PriorityQueue::InitPriorityQueue() {
+    return  shared_ptr<pq>(new pq); // Allocate memory for a pq structure using smart pointers
 }
 
-void PriorityQueue::Insert(shared_ptr<vector<pq>> queue, string text, float priority) {
-    if (!queue){
-        return;
+void PriorityQueue::Insert(shared_ptr<pq> queue, string text, float priority) {
+    pq newElement;
+    newElement.text = text;
+    newElement.priority = priority;
+    array.push_back(newElement); // Insert the new element at the end of the vector
+
+    // Perform heapify-up to maintain the heap property
+    int currentIndex = array.size() - 1;
+    while (currentIndex > 0) {
+        int parentIndex = (currentIndex - 1) / 2;
+        if (array[currentIndex].priority <= array[parentIndex].priority)
+            break;
+        swap(array[currentIndex], array[parentIndex]);
+        currentIndex = parentIndex;
     }
-    pq element;
-    element.text = text;
-    element.priority = priority;
-
-    // Insert the element at the end of the queue
-    queue->push_back(element);
-    heapifyUp(queue, queue->size() - 1);
-    
 }
 
-string PriorityQueue::Remove(shared_ptr<vector<pq>> queue) {
-    if (queue->empty()) {
+string PriorityQueue::Remove(shared_ptr<pq> queue) {
+    if (array.empty())
         return "";
+
+    // Remove the highest priority element from the root of the heap
+    string removedText = array[0].text;
+    array[0] = array.back();
+    array.pop_back();
+
+    // Perform heapify-down to maintain the heap property
+    int currentIndex = 0;
+    int size = array.size();
+    while (true) {
+        int leftChildIndex = 2 * currentIndex + 1;
+        int rightChildIndex = 2 * currentIndex + 2;
+        int largestIndex = currentIndex;
+
+        if (leftChildIndex < size && array[leftChildIndex].priority > array[largestIndex].priority)
+            largestIndex = leftChildIndex;
+
+        if (rightChildIndex < size && array[rightChildIndex].priority > array[largestIndex].priority)
+            largestIndex = rightChildIndex;
+
+        if (largestIndex == currentIndex)
+            break;
+
+        swap(array[currentIndex], array[largestIndex]);
+        currentIndex = largestIndex;
     }
 
-   
-    string result = queue->at(0).text;
-    queue->at(0) = queue->back();
-    queue->pop_back();
-    heapifyDown(queue, 0);
-
-    return result;
+    return removedText;
 }
 
-string PriorityQueue::Peek(shared_ptr<vector<pq>> queue) {
-    if (queue->empty()) {
+string PriorityQueue::Peek(shared_ptr<pq> queue) {
+    if (array.empty())
         return "";
-    }
-
-    return queue->at(0).text;
-}
-
-void PriorityQueue::heapifyUp(shared_ptr<vector<pq>> queue, int index) {
-    int parentIndex = (index - 1) / 2;
-    while (index > 0 && queue->at(parentIndex).priority > queue->at(index).priority) {
-        swap(queue->at(parentIndex), queue->at(index));
-        index = parentIndex;
-        parentIndex = (index - 1) / 2;
-    }
-}
-
-void PriorityQueue::heapifyDown(shared_ptr<vector<pq>> queue, int index) {
-    int size = queue->size();
-    int leftChildIndex = 2 * index + 1;
-    int rightChildIndex = 2 * index + 2;
-    int smallestIndex = index;
-
-    if (leftChildIndex < size && queue->at(leftChildIndex).priority < queue->at(smallestIndex).priority) {
-        smallestIndex = leftChildIndex;
-    }
-
-    if (rightChildIndex < size && queue->at(rightChildIndex).priority < queue->at(smallestIndex).priority) {
-        smallestIndex = rightChildIndex;
-    }
-
-    if (smallestIndex != index) {
-        swap(queue->at(index), queue->at(smallestIndex));
-        heapifyDown(queue, smallestIndex);
-    }
+    return array[0].text; // Return the text of the highest priority element (root of the heap)
 }
